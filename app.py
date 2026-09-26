@@ -27,3 +27,18 @@ for i, col in enumerate(cols):
         st.info("Image render area")
         if dialogue:
             st.chat_message("user").write(f"💬 **{dialogue}**")
+            st.divider()
+
+if st.button("🎨 Generate Comic", use_container_width=True):
+    st.success("✨ Your comic is being created...")
+
+    st.subheader("📖 Generated Comic")
+
+    for i in range(num_panels):
+        st.markdown(f"### Panel {i + 1}")
+
+        if i < len(panel_data):
+            st.write(f"🎬 {panel_data[i][0]}")
+            st.info(f"💬 {panel_data[i][1]}")
+
+    st.success("🎉 Comic generation completed!")
