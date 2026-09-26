@@ -10,7 +10,7 @@ st.caption("Design comic strips with custom panels, prompts, and dialogues.")
 
 # Sidebar
 with st.sidebar:
-    st.header("⚙️ Comic Settings")
+    st.header("Comic Settings")
 
     comic_title = st.text_input(
         "Comic Title",
@@ -37,16 +37,14 @@ with st.sidebar:
 
 st.subheader(comic_title)
 
-# Default comic content
+# Comic content
 panel_data = [
     (
-        "A girl studies quietly in a college library while a shy boy "
-        "at the next table secretly looks at her.",
+        "A girl studies quietly in a college library while a shy boy at the next table secretly looks at her.",
         "Why do I keep looking at her instead of my book?"
     ),
     (
-        "The girl notices him staring and gives him a small playful smile "
-        "before returning to her book.",
+        "The girl notices him staring and gives him a small playful smile before returning to her book.",
         "You've been staring at that page for ten minutes."
     ),
     (
@@ -59,48 +57,40 @@ panel_data = [
     )
 ]
 
-# Panel Layout
+# Panel preview
+st.subheader("📝 Comic Panels")
+
 cols = st.columns(num_panels)
 
 for i, col in enumerate(cols):
-
     with col:
-        st.markdown(f"### 🖼️ Panel {i + 1}")
+        st.markdown(f"### Panel {i + 1}")
 
-        prompt = st.text_area(
+        st.text_area(
             f"Scene Description {i + 1}",
-            value=panel_data[i][0]
+            value=panel_data[i][0],
+            key=f"scene_{i}"
         )
 
-        dialogue = st.text_input(
+        st.text_input(
             f"Speech Bubble {i + 1}",
-            value=panel_data[i][1]
+            value=panel_data[i][1],
+            key=f"dialogue_{i}"
         )
 
-        st.info("🎨 Image render area")
-
-        if dialogue:
-            st.chat_message("user").write(
-                f"💬 {dialogue}"
-            )
+        st.info("🖼️ Image will appear here")
 
 # Generate button
 st.divider()
 
 if st.button("🎨 Generate Comic", use_container_width=True):
+    st.subheader("🖼️ Generated Comic")
 
-    st.success("✨ Your comic is being created...")
-
-    st.subheader("📖 Generated Comic")
+    st.success("🎉 Comic generation completed!")
 
     for i in range(num_panels):
-
-        st.markdown(f"### 🖼️ Panel {i + 1}")
+        st.markdown(f"### Panel {i + 1}")
 
         st.write(panel_data[i][0])
 
-        st.info(
-            f"💬 {panel_data[i][1]}"
-        )
-
-    st.success("🎉 Comic generation completed!")
+        st.info(f"💬 {panel_data[i][1]}")
