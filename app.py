@@ -4,10 +4,6 @@ import json
 from google import genai
 from google.genai import types
 
-# --------------------------------------------------
-# PAGE
-# --------------------------------------------------
-
 st.set_page_config(
     page_title="ComicCraft AI",
     page_icon="🎨",
@@ -17,22 +13,17 @@ st.set_page_config(
 st.title("🎨 ComicCraft AI")
 st.write("Turn your imagination into an original AI-powered comic.")
 
-# --------------------------------------------------
-# API
-# --------------------------------------------------
-
+# API KEY
 api_key = os.getenv("GEMINI_API_KEY")
 
 if not api_key:
-    st.error("❌ GEMINI_API_KEY is missing.")
+    st.error("❌ GEMINI_API_KEY is not configured.")
+    st.info("Add GEMINI_API_KEY to your Streamlit Secrets.")
     st.stop()
 
 client = genai.Client(api_key=api_key)
 
-# --------------------------------------------------
 # SIDEBAR
-# --------------------------------------------------
-
 st.sidebar.header("⚙️ Comic Settings")
 
 title = st.sidebar.text_input(
@@ -42,9 +33,9 @@ title = st.sidebar.text_input(
 
 num_panels = st.sidebar.slider(
     "Number of Panels",
-    min_value=1,
-    max_value=4,
-    value=4
+    1,
+    4,
+    4
 )
 
 art_style = st.sidebar.selectbox(
@@ -58,146 +49,178 @@ art_style = st.sidebar.selectbox(
     ]
 )
 
-# --------------------------------------------------
 # STORY IDEA
-# --------------------------------------------------
-
 idea = st.text_area(
-    "💡 What should your comic be about?",
+    "💡 Your Story Idea",
     "A shy college girl discovers that her mysterious classmate has a magical secret."
 )
 
-# --------------------------------------------------
 # GENERATE STORY
-# --------------------------------------------------
-
 if st.button("✨ Generate Story", use_container_width=True):
 
-    story_prompt = f"""
+    prompt = f"""
 Create a coherent {num_panels}-panel comic story.
 
-Comic title:
-{title}
+Title: {title}
 
-Story idea:
-{idea}
-
-Art style:
-{art_style}
+Idea: {idea}
 
 Requirements:
-- The story must flow naturally from panel to panel.
+- The story must flow from panel to panel.
 - Keep the same characters throughout.
-- Each panel must continue from the previous panel.
-- Give every panel a clear visual scene.
-- Give every panel natural dialogue.
-- Keep dialogue short enough for a comic speech bubble.
-- Do not make the story repetitive.
+- Each panel must continue the previous panel.
+- Every panel needs a clear visual scene.
+- Every panel needs short natural dialogue.
+- Keep dialogue suitable for speech bubbles.
 
-Return ONLY valid JSON in this format:
+Return only valid JSON:
 
 {{
   "panels": [
     {{
-      "scene": "Detailed visual description of the panel",
-      "dialogue": "Short character dialogue"
+      "scene": "visual description",
+      "dialogue": "short dialogue"
     }}
   ]
 }}
 """
 
     try:
-
         with st.spinner("✍️ Creating your story..."):
 
             response = client.models.generate_content(
-                model="gemini-3.8-flash",
-                contents=story_prompt,
+                model="gemini-2.5-flash",
+                contents=prompt,
                 config=types.GenerateContentConfig(
                     response_mime_type="application/json"
                 )
             )
 
-        data = json.loads(response.text)
+        story = json.loads(response.text)
 
-        st.session_state["comic_panels"] = data["panels"]
+        st.session_state["panels"] = story["panels"]
 
-        st.success("🎉 Story created! You can edit the panels below.")
+        st.success("🎉 Story created!")
 
-    except Exception as e:
-
+    except Exception as error:
         st.error("❌ Story generation failed.")
-        st.code(str(e))
+        st.code(str(error))
 
-# --------------------------------------------------
+
 # EDIT PANELS
-# --------------------------------------------------
+if "panels" in st.session_state:
 
-if "comic_panels" in st.session_state:
+    st.subheader("📝 Edit Your Panels")
 
-    st.subheader("📝 Edit Your Comic Panels")
+    panels = st.session_state["panels"]
 
-    panels = st.session_state["comic_panels"]
+    for index in range(len(panels)):
 
-    for i in range(len(panels)):
+        st.markdown("### 🎬 Panel " + str(index + 1))
 
-        st.markdown(f"### 🎬 Panel {i + 1}")
-
-        panels[i]["scene"] = st.text_area(
-            "Scene description",
-            panels[i]["scene"],
-            key=f"scene_{i}"
+        panels[index]["scene"] = st.text_area(
+            "Scene",
+            panels[index]["scene"],
+            key="scene_" + str(index)
         )
 
-        panels[i]["dialogue"] = st.text_input(
+        panels[index]["dialogue"] = st.text_input(
             "Dialogue",
-            panels[i]["dialogue"],
-            key=f"dialogue_{i}"
+            panels[index]["dialogue"],
+            key="dialogue_" + str(index)
         )
 
         st.divider()
 
-    # --------------------------------------------------
-    # GENERATE ACTUAL IMAGES
-    # --------------------------------------------------
-
-    if st.button("🎨 Generate Comic Images", use_container_width=True):
+    # GENERATE COMIC
+    if st.button("🎨 Generate Comic", use_container_width=True):
 
         st.subheader("📖 Your AI Comic")
 
-        for i, panel in enumerate(panels):
+        for index, panel in enumerate(panels):
 
             image_prompt = f"""
-Create a single comic panel image.
+Create a single illustrated comic panel.
 
-Comic title:
-{title}
+Comic title: {title}
 
-Panel:
-{i + 1} of {len(panels)}
+Panel number: {index + 1}
 
 Scene:
 {panel["scene"]}
 
-Dialogue context:
-{panel["dialogue"]}
-
 Art style:
 {art_style}
 
-Important visual requirements:
-- Create an actual illustrated comic panel.
-- Keep the characters visually consistent.
-- Make the scene match the description.
-- Clear facial expressions and body language.
-- Cinematic comic composition.
-- Leave suitable space for a speech bubble.
-- Do NOT write the dialogue as text inside the image.
-- No placeholder boxes.
-- No words such as "Image will appear here".
+Create an actual illustrated comic panel.
+Keep characters visually consistent.
+Show clear expressions and body language.
+Use cinematic comic composition.
+Leave space for a speech bubble.
+Do not put written dialogue inside the image.
+Do not create placeholder boxes.
 """
 
             try:
 
                 with st.spinner(
-                    f"🎨
+                    "🎨 Generating Panel " + str(index + 1) + "..."
+                ):
+
+                    image_response = client.models.generate_content(
+                        model="gemini-2.5-flash-image",
+                        contents=image_prompt
+                    )
+
+                image_found = False
+
+                for part in image_response.parts:
+
+                    if part.inline_data is not None:
+
+                        image = part.as_image()
+
+                        st.image(
+                            image,
+                            caption="Panel " + str(index + 1),
+                            use_container_width=True
+                        )
+
+                        image_found = True
+                        break
+
+                if image_found:
+
+                    st.markdown(
+                        "💬 **Dialogue:** "
+                        + panel["dialogue"]
+                    )
+
+                else:
+
+                    st.warning(
+                        "⚠️ No image was returned for Panel "
+                        + str(index + 1)
+                        + "."
+                    )
+
+            except Exception as error:
+
+                st.error(
+                    "❌ Panel "
+                    + str(index + 1)
+                    + " failed."
+                )
+
+                st.code(str(error))
+
+            st.divider()
+
+        st.success("🎉 Comic generation finished!")
+
+else:
+
+    st.info(
+        "👆 Enter your story idea and click "
+        "**Generate Story** to begin."
+    )
