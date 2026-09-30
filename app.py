@@ -1,274 +1,119 @@
 import streamlit as st
-import base64
-import time
-from google import genai
 
-
-# --------------------------------------------------
-# PAGE SETTINGS
-# --------------------------------------------------
-
-st.set_page_config(
-    page_title="ComicCraft AI",
-    page_icon="🎨",
-    layout="wide"
-)
+st.set_page_config(page_title="ComicCraft AI")
 
 st.title("🎨 ComicCraft AI")
-st.write("Turn your imagination into an original AI-powered comic.")
+st.write("Turn your imagination into an AI-powered comic!")
 
-
-# --------------------------------------------------
-# GET API KEY
-# --------------------------------------------------
-
-try:
-    api_key = st.secrets["GEMINI_API_KEY"]
-except Exception:
-    api_key = None
-
-if not api_key:
-    st.error("❌ GEMINI_API_KEY is not configured.")
-    st.info(
-        "Go to Streamlit → Manage app → Settings → Secrets "
-        "and add GEMINI_API_KEY."
-    )
-    st.stop()
-
-
-# --------------------------------------------------
-# GEMINI CLIENT
-# --------------------------------------------------
-
-client = genai.Client(api_key=api_key)
-
-
-# --------------------------------------------------
-# SIDEBAR
-# --------------------------------------------------
-
-st.sidebar.header("⚙️ Comic Settings")
-
-title = st.sidebar.text_input(
-    "Comic Title",
-    "My Amazing Comic"
-)
-
-panels = st.sidebar.slider(
-    "Number of Panels",
-    1,
-    6,
-    4
-)
-
-style = st.sidebar.selectbox(
-    "Art Style",
-    [
-        "Classic Comic",
-        "Classic Manga",
-        "Cartoon",
-        "Anime"
-    ]
-)
-
-
-# --------------------------------------------------
-# STORY IDEA
-# --------------------------------------------------
+title = st.text_input("Comic Title", "My Amazing Comic")
 
 idea = st.text_area(
     "💡 Your Story Idea",
-    placeholder="Example: A shy college girl discovers a magical talking cat..."
+    "A college student arrives late to class and something funny happens."
 )
 
+style = st.selectbox(
+    "🎨 Art Style",
+    ["Classic Comic", "Classic Manga", "Cartoon", "Anime"]
+)
 
-# --------------------------------------------------
-# GENERATE BUTTON
-# --------------------------------------------------
+panels = st.slider("Number of Panels", 1, 6, 4)
 
-if st.button("✨ Generate Story", use_container_width=True):
+if st.button("✨ Generate Story"):
+    st.success("🎉 Comic generation started!")
+    st.write("Title:", title)
+    st.write("Story idea:", idea)
+    st.write("Style:", style)
+    st.write("Number of panels:", panels)
 
-    if not idea.strip():
-        st.warning("⚠️ Please enter your story idea first.")
-        st.stop()
+st.subheader("🎨 Comic Panels")
 
+panel1 = st.text_area(
+    "Panel 1",
+    "The student enters the classroom late."
+)
 
-    # --------------------------------------------------
-    # CREATE STORY
-    # --------------------------------------------------
+panel2 = st.text_area(
+    "Panel 2",
+    "Everyone looks at the student."
+)
 
-    story_prompt = f"""
-Create an original comic story.
+panel3 = st.text_area(
+    "Panel 3",
+    "The teacher smiles at the student."
+)
 
-Comic Title: {title}
+panel4 = st.text_area(
+    "Panel 4",
+    "Everyone laughs together."
+)
 
-Number of Panels: {panels}
+if st.button("✨ Show Panels"):
+    st.write("### 🖼️ Panel 1")
+    st.write(panel1)
 
-Art Style: {style}
+    st.write("### 🖼️ Panel 2")
+    st.write(panel2)
 
-Story Idea:
-{idea}
+    st.write("### 🖼️ Panel 3")
+    st.write(panel3)
 
-Create exactly {panels} panels.
-
-For each panel provide:
-
-Panel Number:
-Scene:
-Characters:
-Dialogue:
-Narration:
-
-Keep the story simple, fun and suitable for a college project.
-
-Make sure every panel has a clear scene that can be turned into an image.
-"""
-
-
-    with st.spinner("📖 Creating your comic story..."):
-
-        try:
-
-            story_response = client.models.generate_content(
-                model="gemini-3.8-flash",
-                contents=story_prompt
-            )
-
-            story_text = story_response.text
-
-        except Exception as e:
-
-            st.error("❌ Story generation failed.")
-            st.code(str(e))
-            st.stop()
-
-
-    # --------------------------------------------------
-    # SHOW STORY
-    # --------------------------------------------------
-
-    st.success("🎉 Comic story generated!")
+    st.write("### 🖼️ Panel 4")
+    st.write(panel4)
 
     st.markdown("---")
-    st.markdown("## 📖 Your Comic Story")
 
-    st.markdown(story_text)
+st.markdown("## 🎨 Your Comic Panels")
 
+panel1 = st.file_uploader(
+    "🖼️ Panel 1",
+    type=["png", "jpg", "jpeg"],
+    key="upload_panel_1"
+)
 
-    # --------------------------------------------------
-    # GENERATE COMIC IMAGES
-    # --------------------------------------------------
+panel2 = st.file_uploader(
+    "🖼️ Panel 2",
+    type=["png", "jpg", "jpeg"],
+    key="upload_panel_2"
+)
 
-    st.markdown("---")
-    st.markdown("## 🎨 Generated Comic Panels")
+panel3 = st.file_uploader(
+    "🖼️ Panel 3",
+    type=["png", "jpg", "jpeg"],
+    key="upload_panel_3"
+)
 
-    st.info(
-        "The AI is now creating the comic artwork. "
-        "This may take a little time."
+panel4 = st.file_uploader(
+    "🖼️ Panel 4",
+    type=["png", "jpg", "jpeg"],
+    key="upload_panel_4"
+)
+
+if panel1:
+    st.image(panel1, caption="Panel 1", width="stretch")
+
+if panel2:
+    st.image(panel2, caption="Panel 2", width="stretch")
+
+if panel3:
+    st.image(panel3, caption="Panel 3", width="stretch")
+
+if panel4:
+    st.image(panel4, caption="Panel 4", width="stretch")
+
+st.markdown("## 🎨 Your Comic")
+
+comic_image = st.file_uploader(
+    "Upload your 4-panel comic",
+    type=["png", "jpg", "jpeg"],
+    key="comic_image"
+)
+
+if comic_image:
+    st.image(
+        comic_image,
+        caption="🎨 ComicCraft AI - 4 Panel Comic",
+        width="stretch"
     )
 
-
-    # Generate each panel separately
-    for panel_number in range(1, panels + 1):
-
-        st.markdown(f"### 🖼️ Panel {panel_number}")
-
-        image_prompt = f"""
-Create ONE comic panel image for an original story.
-
-Comic title:
-{title}
-
-Panel number:
-{panel_number} of {panels}
-
-Art style:
-{style}
-
-Original story idea:
-{idea}
-
-Story information:
-{story_text}
-
-Create a visually clear comic scene for panel {panel_number}.
-
-IMPORTANT:
-- Generate ONLY the artwork for this panel.
-- Do not create multiple panels.
-- Do not create a comic page containing several panels.
-- Keep the same characters and visual appearance throughout the story.
-- Use expressive characters.
-- Use a clean composition.
-- Make it suitable for a college project.
-- Leave enough visual space for speech bubbles.
-- Do NOT write dialogue inside the image.
-- Do NOT add random text.
-- Make the image look like a polished {style} comic illustration.
-"""
-
-
-        try:
-
-            with st.spinner(
-                f"🎨 Creating Panel {panel_number}..."
-            ):
-
-                interaction = client.interactions.create(
-                    model="gemini-3.1-flash-image",
-                    input=image_prompt,
-                    response_format={
-                        "type": "image",
-                        "aspect_ratio": "16:9",
-                        "image_size": "1K"
-                    }
-                )
-
-
-            # Get generated image
-            if interaction.output_image:
-
-                image_data = base64.b64decode(
-                    interaction.output_image.data
-                )
-
-                st.image(
-                    image_data,
-                    use_container_width=True
-                )
-
-                st.success(
-                    f"✅ Panel {panel_number} created!"
-                )
-
-            else:
-
-                st.warning(
-                    f"⚠️ No image was returned for Panel {panel_number}."
-                )
-
-
-        except Exception as e:
-
-            st.error(
-                f"❌ Panel {panel_number} image generation failed."
-            )
-
-            st.code(str(e))
-
-
-        # Small pause between image requests
-        time.sleep(1)
-
-
-    # --------------------------------------------------
-    # FINISHED
-    # --------------------------------------------------
-
-    st.markdown("---")
-
-    st.success(
-        "🎉 Your ComicCraft AI comic is ready!"
-    )
-
-    st.balloons()
+    st.success("🎉 Your ComicCraft AI comic is ready!")
